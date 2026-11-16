@@ -1,0 +1,154 @@
+# Centro Clínico Yamdan C.A. — Sitio web
+
+_«Comprometidos con tu salud»_
+
+Landing page premium con portal de resultados para pacientes y panel administrativo oculto.
+HTML, CSS y JavaScript puros: no hay que compilar nada. El PHP es opcional y sirve para publicar con un clic.
+
+## Secciones
+
+Portada (hero) · Cifras · **Portal de resultados** · Servicios · Nosotros (misión y visión) · Por qué elegirnos ·
+Cómo funciona · Chequeos y precios · Toma a domicilio · Equipo · Convenios · Testimonios ·
+Preparación de exámenes · Preguntas frecuentes · **Cómo llegar (Google Maps + Waze)** · Contacto por WhatsApp.
+
+Todas las secciones se pueden editar, ocultar y reordenar desde el panel.
+
+## Panel administrativo
+
+Formas de abrirlo:
+
+1. Botón **«Iniciar sesión»** al final del pie de página, junto a «Protección de datos personales».
+2. Pulsar **Ctrl + Shift + A**.
+3. Abrir la dirección del sitio terminada en **`#admin`** (por ejemplo, `midominio.com/#admin`).
+
+La **clave inicial es `123456`**. Cámbiela desde la pestaña **Publicar** el mismo día que entregue el sitio.
+
+Pestañas del panel:
+
+| Pestaña | Qué se edita |
+|---|---|
+| Secciones | Textos, imágenes y elementos de cada sección (agregar, quitar, reordenar). Cada imagen se puede mostrar **en un recuadro elegante** o **de fondo**, y el oscurecimiento del fondo es ajustable. |
+| Marca y logo | Nombre, logo (viene cargado el de Yamdan), **tamaño del logo** en el menú y en la portada, **posición** (arriba del título, debajo de los botones o grande a la derecha), **alineación**, fondo blanco tras el logo, colores de marca (azul, verde y naranja del logo), teléfono, WhatsApp, correo, dirección y redes. |
+| Resultados | Conexión con el software del laboratorio. |
+| Orden | Orden de las secciones y cuáles se muestran. |
+| Publicar | Publicar, exportar o importar el contenido, cambiar la clave y restaurar. |
+
+Con la sesión iniciada, cada sección de la página muestra un botón **«✎ Editar»** que abre directamente su formulario.
+
+## Portal de resultados (conectado a BIOsoft)
+
+El sitio viene en modo **BIOsoft**: se conecta directamente a la base de datos del software (Firestore `biosoft-produccion`).
+No requiere servidor propio ni claves secretas.
+
+Cómo funciona:
+
+1. En BIOsoft, el laboratorio envía el resultado desde **Reportes → Enviar resultados**.
+   BIOsoft lo publica en `resultadosPublicos/{código}`.
+2. El paciente entra a la web, escribe su **número de documento** y el **código de consulta de 6 dígitos** de su comprobante,
+   y autoriza el uso de sus datos (CRBV, arts. 28 y 60).
+3. La web lee **solo ese código** (nunca un listado) y verifica que el documento coincida.
+   Si el código o el documento no corresponden, muestra el mismo mensaje en ambos casos, para no revelar cuál falló.
+4. El paciente ve su nombre, el número de orden y la fecha. En computador el PDF se muestra en pantalla.
+   Puede descargarlo o abrirlo en otra pestaña, y descargar también **sus resultados anteriores** (historial).
+
+En **Panel → Resultados**:
+
+- **ID del laboratorio en BIOsoft** (opcional, recomendado): es el valor `t=` del enlace de la Página Web en
+  BIOsoft (Configuración → Página Web). Con él, la web solo muestra resultados de Yamdan.
+- **Importar marca y contenido desde BIOsoft**: trae lo que el laboratorio ya configuró en BIOsoft y solo reemplaza lo que tenga dato:
+  - logo, color, teléfono/WhatsApp, correo, dirección y redes sociales;
+  - textos de portada y nosotros, y sus fotos;
+  - servicios, testimonios y cifras;
+  - horario y ubicación del mapa.
+
+  Si la web está en el dominio registrado en BIOsoft, encuentra el laboratorio sola.
+
+Hay otros modos disponibles para laboratorios que no usan BIOsoft:
+
+- **Demostración**: muestra un resultado de ejemplo.
+- **Enlace de otro software**: arma la URL con `{cedula}`, `{codigo}` y `{tipo}`.
+- **API JSON**: hace `POST {tipo, cedula, codigo}` y espera `{ok, pdfUrl | pdfBase64 | html, message}`.
+
+Después de 6 consultas fallidas, el formulario se bloquea unos minutos en ese navegador.
+
+## Dónde publicarlo
+
+### Opción A: Vercel (la que se usa actualmente)
+
+**Publicar** guarda los cambios directamente en este repositorio de GitHub, en un solo commit con
+`content.json` y las imágenes nuevas en `uploads/`. Vercel vuelve a desplegar solo, en 1 a 2 minutos.
+Es gratis y no depende de los límites de Vercel Blob. Se activa una sola vez:
+
+1. **Crear la clave de GitHub.** En github.com, entre a la foto de perfil → **Settings** → **Developer settings**
+   → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**, y llene:
+   - Nombre: `panel-yamdan`. Expiración: la más larga disponible.
+   - **Repository access**: *Only select repositories* → `yamdan`.
+   - **Permissions** → **Repository permissions** → **Contents**: *Read and write*.
+   - Pulse **Generate token** y copie el código (empieza por `github_pat_`).
+2. **Pegarla en Vercel.** Vaya al proyecto → **Settings** → **Environment Variables** → **Add**.
+   Nombre `GITHUB_TOKEN`, valor el código copiado, todos los entornos → **Save**.
+3. **Redeploy.** En **Deployments**, abra el menú «⋯» del último despliegue → **Redeploy**.
+4. **Comprobar.** En la página, pulse **Iniciar sesión** → pestaña **Publicar**.
+   Debe aparecer 🟢 «Publicación conectada (Vercel + GitHub)».
+
+Funcionamiento:
+
+- El repositorio y la rama se toman automáticamente del despliegue de Vercel.
+  Si se quieren fijar, use `GITHUB_REPO` (`dueño/repositorio`) y `GITHUB_BRANCH`.
+- Cada publicación queda en el historial de GitHub, que sirve de respaldo y permite volver a una versión anterior.
+- **Clave del panel**: se cambia con la variable `ADMIN_PASSWORD` en Vercel y luego **Redeploy**.
+  Si no existe esa variable, la clave es `123456`.
+- Si en lugar de `GITHUB_TOKEN` se conecta un almacenamiento **Vercel Blob** público, el panel lo usa automáticamente.
+
+### Opción B: hosting con PHP (cPanel, Hostinger, etc.)
+
+1. Suba todos los archivos a `public_html`.
+2. Dé permiso de escritura a la raíz del sitio, a `uploads/` y a `api/data/`.
+3. Listo. El panel muestra «Publicación conectada»:
+   - **Publicar cambios** actualiza el sitio para todos los visitantes.
+   - Las imágenes se guardan en `uploads/`.
+   - Cada publicación deja un respaldo en `api/data/` (se conservan los últimos 15).
+   - La clave se cambia desde el panel y se guarda cifrada en el servidor.
+   - Después de 10 claves incorrectas, el acceso se bloquea 15 minutos.
+
+### Opción C: sin servidor (GitHub Pages, Netlify)
+
+El panel funciona en «Modo navegador»: los cambios se guardan solo en ese navegador.
+Para publicarlos, use **Publicar → Descargar content.json** y suba ese archivo a la raíz del sitio.
+
+## Estructura
+
+```
+index.html                 página
+assets/css/styles.css      diseño del sitio
+assets/css/admin.css       diseño del panel
+assets/js/content.default.js  contenido de ejemplo (textos iniciales)
+assets/js/app.js           renderizado, resultados, mapa, interacciones
+assets/js/admin.js         panel administrativo
+assets/js/icons.js         iconos SVG
+api/admin.js, api/content.js  publicación en Vercel (GitHub o Vercel Blob)
+api/save.php               publicación en hosting con PHP
+package.json               dependencia @vercel/blob para las funciones de Vercel
+content.json               (se crea al publicar) contenido real del cliente
+```
+
+## Identidad visual Yamdan
+
+| Uso | Color | Dónde se ve |
+|---|---|---|
+| Principal | `#0f2f8f` azul | Menú, pie, fondos oscuros, paquete destacado |
+| Acento | `#1e9b34` verde | Botones, iconos, viñetas |
+| Detalle | `#f26a1c` naranja | Estrellas, líneas de títulos, barra de progreso |
+
+Los tres se cambian en **Panel → Marca y logo → Colores de marca**.
+Logo, favicon e imagen para compartir están en `assets/img/` (`logo-yamdan.webp`, `icon-512.png`, `og-image.jpg`).
+Si el dominio final no es `yamdan.vercel.app`, actualice las direcciones `og:url`, `og:image` y `canonical` en `index.html`.
+
+## Recomendaciones antes de entregar
+
+- Cambie la clave `123456` (en Vercel: variable `ADMIN_PASSWORD`).
+- En Vercel, agregue `GITHUB_TOKEN` para activar «Publicar» (ver «Opción A»).
+- Reemplace las fotos de ejemplo por fotos reales del laboratorio y del equipo.
+- Configure el teléfono, WhatsApp, correo, RIF, la dirección y el enlace de Google Maps (Compartir → Insertar un mapa → copiar HTML).
+- En Panel → Resultados, escriba el ID del laboratorio en BIOsoft y pulse «Importar marca y contenido desde BIOsoft».
+- Haga una consulta real con el documento y el código de un paciente cuyo resultado ya se haya enviado desde BIOsoft.

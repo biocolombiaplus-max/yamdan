@@ -1,0 +1,6 @@
+api/data/*
+!api/data/.htaccess
+uploads/*
+!uploads/.htaccess
+.DS_Store
+node_modules/

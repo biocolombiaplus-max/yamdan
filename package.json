@@ -1,0 +1,8 @@
+{
+  "name": "centro-clinico-yamdan",
+  "private": true,
+  "description": "Sitio web del Centro Clínico Yamdan C.A.",
+  "dependencies": {
+    "@vercel/blob": "2.8.2"
+  }
+}
